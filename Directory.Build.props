@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <RepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))</RepositoryRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefaultTargetFramework>net6.0</DefaultTargetFramework>
+    <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>dev</VersionSuffix>
+    <RepositoryUrl>https://github.com/suraciii/DotNetInstrumentAggregators</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <DebugType>portable</DebugType>
+    <!-- <NoWarn>AD0001,CA1816</NoWarn> -->
+  </PropertyGroup>
+</Project>
