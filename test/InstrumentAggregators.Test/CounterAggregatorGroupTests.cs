@@ -7,15 +7,10 @@ using Xunit.Abstractions;
 
 namespace InstrumentAggregators.Test;
 
-public class CounterAggregatorGroupTests
+public class CounterAggregatorGroupTests(ITestOutputHelper output)
 {
-    private readonly ITestOutputHelper _output;
-    private readonly Meter _meter;
-    public CounterAggregatorGroupTests(ITestOutputHelper output)
-    {
-        _output = output;
-        _meter = new Meter(nameof(CounterAggregatorGroupTests));
-    }
+    private readonly ITestOutputHelper _output = output;
+    private readonly Meter _meter = new(nameof(CounterAggregatorGroupTests));
 
     [Fact]
     public void ValidateAggregatorCache()

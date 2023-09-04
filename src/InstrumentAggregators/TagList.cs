@@ -15,7 +15,7 @@ public record struct TagList(
 {
     public static readonly TagList Empty = new();
 
-    public KeyValuePair<string, object?>[] ToArray()
+    public readonly KeyValuePair<string, object?>[] ToArray()
     {
         return this switch
         {
