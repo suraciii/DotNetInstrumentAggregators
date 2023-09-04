@@ -5,22 +5,9 @@ using System.Linq;
 
 namespace InstrumentAggregators;
 
-internal sealed class HistogramAggregatorGroup(HistogramAggregatorOptions options)
+public sealed class HistogramAggregatorGroup(HistogramAggregatorOptions options)
 {
-    private readonly HistogramAggregatorOptions _options = options;
-
-    internal ConcurrentDictionary<TagList, HistogramAggregator> Aggregators { get; } = new();
-    public HistogramAggregatorGroup(
-        HistogramAggregatorOptions options,
-        Meter meter,
-        string name,
-        string? unit = null,
-        string? description = null) : this(options)
-    {
-        meter.CreateObservableCounter(name + "-bucket", CollectBuckets, description: description);
-        meter.CreateObservableCounter(name + "-count", CollectCount, description: description);
-        meter.CreateObservableCounter(name + "-sum", CollectSum, unit, description);
-    }
+    public ConcurrentDictionary<TagList, HistogramAggregator> Aggregators { get; } = new();
 
     public HistogramAggregator FindOrCreate(in TagList tagList)
     {
@@ -28,7 +15,7 @@ internal sealed class HistogramAggregatorGroup(HistogramAggregatorOptions option
         {
             return stat;
         }
-        return Aggregators.GetOrAdd(tagList, new HistogramAggregator(tagList, _options));
+        return Aggregators.GetOrAdd(tagList, new HistogramAggregator(tagList, options));
     }
 
     public IEnumerable<Measurement<long>> CollectBuckets()

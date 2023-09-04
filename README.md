@@ -4,39 +4,26 @@ Aggregate and group `System.Diagnostics.Metrics` counters and collect them as `O
 
 ## Basic Usage:
 
+### Histogram Metrics:
+
 ```csharp
-internal sealed class MyTelemetry
-{
-    public static Meter Meter { get; }
-    private static readonly CounterAggregatorGroup s_myCounterAggregatorGroup
-        = new(Meter, "counter_name1");
-    private static readonly HistogramAggregatorGroup s_myHistogramAggregatorGroup = new(
-        new HistogramAggregatorOptions(
-            new long[] { 5, 20, 100, 500, 1_000, 5_000, 20_000 }),
-        Meter, "latency_histogram_name2"
-    );
-        = new(Meter, "my_metrics_name2");
+var group = new CounterAggregatorGroup();
+var counter = group.CreateInstrument(_meter, "request_count");
+var aggregator1 = group.FindOrCreate(new("method", "get"));
+var aggregator2 = group.FindOrCreate(new("method", "post"));
+aggregator1.Add(1);
+```
 
-    private readonly CounterAggregator _myCounter;
-    public MyTelemetry(string tagValue1, string tagValue2)
-    {
-        var tagList = new TagList("tagName1", tagValue1, "tagName2", tagValue2);
-        // get aggregator with specific tags from aggregator group
-        _myCounter = s_newMessageFetchedCounterGroup.FindOrCreate(tagList);
-        _myHistogram = s_myHistogramAggregatorGroup.FindOrCreate(tagList);
-    }
+### Histogram Metrics:
 
-    public void RecordCounter()
-    {
-        _myCounter.Add(1);
-    }
-
-    // histograms will be record as 3 counters:
-    // latency_histogram_name2_count, latency_histogram_name2_sum and latency_histogram_name2_buckets
-    public void RecordHistogram(TimeSpan timeSpan)
-    {
-        _myHistogram.Record((long)latency.TotalMilliseconds);
-    }
-}
+```csharp
+var bounds = new long[] { 1, 3, 5, 8, 13 };
+var group = new HistogramAggregatorGroup(new HistogramAggregatorOptions(bounds));
+var metricsName = "request_duration";
+var (bucket, count, sum) = group.CreateInstrument(_meter, metricsName);
+var aggregator = group.FindOrCreate(new TagList("foo", "bar"));
+aggregator.Record(0);
+aggregator.Record(2);
+aggregator.Record(5);
 ```
 

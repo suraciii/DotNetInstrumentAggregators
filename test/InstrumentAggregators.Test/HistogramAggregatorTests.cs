@@ -12,10 +12,13 @@ public class HistogramAggregatorTests
     }
 
     [Fact]
-    public void CollectBuckets()
+    public void CollectHistogram()
     {
         var bounds = new long[] { 1, 3, 5, 8, 13 };
-        var aggregator = new HistogramAggregator(new TagList("foo", "bar"), new HistogramAggregatorOptions(bounds));
+        var group = new HistogramAggregatorGroup(new HistogramAggregatorOptions(bounds));
+        var metricsName = "request_duration";
+        var (bucket, count, sum) = group.CreateInstrument(_meter, metricsName);
+        var aggregator = group.FindOrCreate(new TagList("foo", "bar"));
         aggregator.Record(0);
         aggregator.Record(2);
         aggregator.Record(5);
@@ -26,7 +29,8 @@ public class HistogramAggregatorTests
         aggregator.Record(15);
         aggregator.Record(20);
         aggregator.Record(100);
-        var buckets = aggregator.CollectBuckets().ToArray();
+
+        var buckets = group.CollectBuckets().ToArray();
         for (int i = 0; i < bounds.Length; i++)
         {
             Assert.Equal("foo", buckets[i].Tags[0].Key);
@@ -41,5 +45,8 @@ public class HistogramAggregatorTests
         Assert.Equal(4, buckets[3].Value);
         Assert.Equal(7, buckets[4].Value);
         Assert.Equal(10, buckets[5].Value);
+        
+        Assert.Equal(10, group.CollectCount().ToArray()[0].Value);
+        Assert.Equal(183, group.CollectSum().ToArray()[0].Value);
     }
 }

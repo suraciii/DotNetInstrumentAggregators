@@ -15,10 +15,10 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
     public void ValidateAggregatorCache()
     {
         var group = new CounterAggregatorGroup();
-        var counter = _meter.CreateObservableCounter(nameof(CounterAggregatorGroupTests), group.Collect);
-
-        var aggregator1 = group.FindOrCreate(new("foo", "bar"));
-        var aggregator2 = group.FindOrCreate(new("foo", "bar"));
+        var counter = group.CreateInstrument(_meter, "request_count");
+        var aggregator1 = group.FindOrCreate(new("method", "get"));
+        var aggregator2 = group.FindOrCreate(new("method", "get"));
+        aggregator1.Add(1);
 
         Assert.Same(aggregator1, aggregator2);
         Assert.Single(group.Aggregators);
@@ -28,10 +28,9 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
     public void Collect()
     {
         var group = new CounterAggregatorGroup();
-        var counter = _meter.CreateObservableCounter(nameof(Collect), group.Collect);
-
-        var aggregator1 = group.FindOrCreate(new("foo", "bar1"));
-        var aggregator2 = group.FindOrCreate(new("foo", "bar2"));
+        var counter = group.CreateInstrument(_meter, "request_count");
+        var aggregator1 = group.FindOrCreate(new("method", "get"));
+        var aggregator2 = group.FindOrCreate(new("method", "post"));
 
         aggregator1.Add(1);
         aggregator1.Add(2);
@@ -40,8 +39,8 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
 
         var measurements = group.Collect().ToList();
         Assert.Equal(2, measurements.Count);
-        Assert.Equal(3, measurements.Single(m => m.Tags[0].Value is "bar1").Value);
-        Assert.Equal(5, measurements.Single(m => m.Tags[0].Value is "bar2").Value);
+        Assert.Equal(3, measurements.Single(m => m.Tags[0].Value is "get").Value);
+        Assert.Equal(5, measurements.Single(m => m.Tags[0].Value is "post").Value);
     }
 
     [Fact]

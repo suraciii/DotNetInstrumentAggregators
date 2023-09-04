@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace InstrumentAggregators;
 
-internal sealed class HistogramBucketAggregator(
+public sealed class HistogramBucketAggregator(
     KeyValuePair<string, object?>[] tags,
     double bound,
     KeyValuePair<string, object?> label)
