@@ -2,31 +2,20 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
 public sealed class CounterAggregatorGroup
 {
     public ConcurrentDictionary<TagList, CounterAggregator> Aggregators { get; } = new();
-    public ObservableCounter<long> Instrument { get; }
-
-    public CounterAggregatorGroup(
-        Meter meter,
-        string name,
-        string? unit = null,
-        string? description = null)
-    {
-        Instrument = meter.CreateObservableCounter(name, Collect, unit, description);
-    }
 
     public CounterAggregator FindOrCreate(in TagList tagList)
     {
-        if (Aggregators.TryGetValue(tagList, out var stat))
+        if (Aggregators.TryGetValue(tagList, out var aggregator))
         {
-            return stat;
+            return aggregator;
         }
         return Aggregators.GetOrAdd(tagList, new CounterAggregator(tagList));
     }
-
 
     public void Add(long measurement, string tagName1, object tagValue1)
         => FindOrCreate(new(tagName1, tagValue1))

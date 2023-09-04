@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
-using CloudEventDotNet.Diagnostics.Aggregators;
 using Xunit.Abstractions;
 
 namespace InstrumentAggregators.Test;
@@ -15,7 +14,8 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
     [Fact]
     public void ValidateAggregatorCache()
     {
-        var group = new CounterAggregatorGroup(_meter, nameof(ValidateAggregatorCache));
+        var group = new CounterAggregatorGroup();
+        var counter = _meter.CreateObservableCounter(nameof(CounterAggregatorGroupTests), group.Collect);
 
         var aggregator1 = group.FindOrCreate(new("foo", "bar"));
         var aggregator2 = group.FindOrCreate(new("foo", "bar"));
@@ -27,7 +27,8 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
     [Fact]
     public void Collect()
     {
-        var group = new CounterAggregatorGroup(_meter, nameof(Collect));
+        var group = new CounterAggregatorGroup();
+        var counter = _meter.CreateObservableCounter(nameof(Collect), group.Collect);
 
         var aggregator1 = group.FindOrCreate(new("foo", "bar1"));
         var aggregator2 = group.FindOrCreate(new("foo", "bar2"));
@@ -48,7 +49,8 @@ public class CounterAggregatorGroupTests(ITestOutputHelper output)
     {
         int numOfIterations = 1000000;
 
-        var group = new CounterAggregatorGroup(_meter, nameof(TestMultithreadedCorrectness));
+        var group = new CounterAggregatorGroup();
+        var counter = _meter.CreateObservableCounter(nameof(TestMultithreadedCorrectness), group.Collect);
         var counterCount = Environment.ProcessorCount;
 
         Parallel.For(0, Environment.ProcessorCount, j =>

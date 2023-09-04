@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
-
-internal class HistogramAggregatorGroup(HistogramAggregatorOptions options)
+internal sealed class HistogramAggregatorGroup(HistogramAggregatorOptions options)
 {
     private readonly HistogramAggregatorOptions _options = options;
 

@@ -1,35 +1,23 @@
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.Linq;
 using System.Threading;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
-public sealed class CounterAggregator(in TagList tagList)
+public sealed class CounterAggregator(
+    in TagList tagList)
 {
+    public CounterAggregator()
+        : this(new TagList()) { }
+
     private readonly KeyValuePair<string, object?>[] _tags = tagList.ToArray();
-    private readonly ObservableCounter<long>? _instrument;
-    private long _value = 0;
 
-    public CounterAggregator(
-        in TagList tagList,
-        Meter meter,
-        string name,
-        string? unit = null,
-        string? description = null) : this(tagList)
-    {
-        _instrument = meter.CreateObservableCounter(name, Collect, unit, description);
-    }
+    private readonly ThreadLocal<long> _value = new(true);
 
-    public CounterAggregator(Meter meter, string name, string? unit = null, string? description = null)
-        : this(new TagList(), meter, name, unit, description) { }
+    public long Value => _value.Values.Sum();
 
-    public CounterAggregator() : this(new TagList()) { }
+    public void Add(long measurement) => _value.Value += measurement;
 
-    public bool Enabled => _instrument?.Enabled ?? false;
-
-    public long Value => _value;
-
-    public void Add(long measurement) => Interlocked.Add(ref _value, measurement);
-
-    public Measurement<long> Collect() => new(_value, _tags);
+    public Measurement<long> Collect() => new(Value, _tags);
 }

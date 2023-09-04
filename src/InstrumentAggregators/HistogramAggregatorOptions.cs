@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
 public record HistogramAggregatorOptions(
     long[] Buckets,

@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
-internal class HistogramBucketAggregator(
+internal sealed class HistogramBucketAggregator(
     KeyValuePair<string, object?>[] tags,
     double bound,
     KeyValuePair<string, object?> label)
 {
-    private long _value = 0;
-    private readonly KeyValuePair<string, object?>[] _tags = tags.Concat(new[] { label }).ToArray();
-    public double Bound { get; } = bound;
+    private readonly KeyValuePair<string, object?>[] _tags = [.. tags, .. new[] { label }];
+    private readonly ThreadLocal<long> _value = new(true);
 
     public ReadOnlySpan<KeyValuePair<string, object?>> Tags => _tags;
 
-    public long Value => _value;
+    public double Bound { get; } = bound;
 
-    public void Add(long measurement) => Interlocked.Add(ref _value, measurement);
+    public long Value => _value.Values.Sum();
+
+    public void Add(long measurement) => _value.Value += measurement;
 }

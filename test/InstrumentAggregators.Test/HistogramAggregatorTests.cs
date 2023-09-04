@@ -1,8 +1,7 @@
 using System.Diagnostics.Metrics;
 using System.Linq;
-using CloudEventDotNet.Diagnostics.Aggregators;
 
-namespace UnitTests.General;
+namespace InstrumentAggregators.Test;
 
 public class HistogramAggregatorTests
 {

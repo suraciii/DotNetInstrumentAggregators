@@ -4,27 +4,15 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading;
 
-namespace CloudEventDotNet.Diagnostics.Aggregators;
+namespace InstrumentAggregators;
 
-public class HistogramAggregator
+public sealed class HistogramAggregator
 {
     private readonly KeyValuePair<string, object?>[] _tags;
     private readonly HistogramBucketAggregator[] _buckets;
     private readonly HistogramAggregatorOptions _options;
-    private long _count;
-    private long _sum;
-
-    public HistogramAggregator(
-        in TagList tagList,
-        HistogramAggregatorOptions options,
-        Meter meter,
-        string name,
-        string? description = null) : this(tagList, options)
-    {
-        meter.CreateObservableCounter(name + "_bucket", CollectBuckets, description: description);
-        meter.CreateObservableCounter(name + "_count", CollectCount, description: description);
-        meter.CreateObservableCounter(name + "_sum", CollectSum, description);
-    }
+    private readonly ThreadLocal<long> _count = new(true);
+    private readonly ThreadLocal<long> _sum = new(true);
 
     public HistogramAggregator(
         in TagList tagList,
@@ -35,7 +23,7 @@ public class HistogramAggregator
         long[] buckets = options.Buckets;
         if (buckets[^1] != long.MaxValue)
         {
-            buckets = buckets.Concat(new[] { long.MaxValue }).ToArray();
+            buckets = [.. buckets, .. new[] { long.MaxValue }];
         }
 
         Func<long, KeyValuePair<string, object?>> getLabel;
@@ -58,6 +46,14 @@ public class HistogramAggregator
         _options = options;
     }
 
+    public (ObservableCounter<long> Sum,ObservableCounter<long> Count,ObservableCounter<long> Bucket)CreateInstruments(Meter meter, string name){
+        return (
+            meter.CreateObservableCounter(name + "_bucket", CollectBuckets),
+            meter.CreateObservableCounter(name + "_count", CollectCount),
+            meter.CreateObservableCounter(name + "_sum", CollectSum)
+        );
+    }
+
     public void Record(long number)
     {
         int i;
@@ -69,8 +65,8 @@ public class HistogramAggregator
             }
         }
         _buckets[i].Add(1);
-        Interlocked.Increment(ref _count);
-        Interlocked.Add(ref _sum, number);
+        _count.Value++;
+        _sum.Value+= number;
     }
 
     public IEnumerable<Measurement<long>> CollectBuckets()
@@ -100,7 +96,7 @@ public class HistogramAggregator
         }
     }
 
-    public Measurement<long> CollectCount() => new(_count, _tags);
+    public Measurement<long> CollectCount() => new(_count.Values.Sum(), _tags);
 
-    public Measurement<long> CollectSum() => new(_sum, _tags);
+    public Measurement<long> CollectSum() => new(_sum.Values.Sum(), _tags);
 }
